@@ -1,10 +1,19 @@
 /* ==============================================================
-   Portfolio interactions — lightbox + subtle scroll behaviours
+   Portfolio interactions — lightbox, auto-updating dates,
+   subtle scroll behaviours
    ============================================================== */
 
 (function () {
   'use strict';
 
+  /* ---------- Dates that should never go stale ---------- */
+  const PRACTICE_START = 2010;
+  const now = new Date();
+  const years = now.getFullYear() - PRACTICE_START;
+  document.querySelectorAll('[data-years]').forEach((el) => { el.textContent = String(years); });
+  document.querySelectorAll('[data-year]').forEach((el) => { el.textContent = String(now.getFullYear()); });
+
+  /* ---------- Lightbox ---------- */
   const lb = document.getElementById('lightbox');
   const lbImg = document.getElementById('lbImg');
   const lbCap = document.getElementById('lbCap');
@@ -15,6 +24,7 @@
   // Collect every zoom-in link into a single gallery, in DOM order
   const items = Array.from(document.querySelectorAll('a.lb'));
   let currentIndex = 0;
+  let returnFocusTo = null;
 
   function openAt(i) {
     if (i < 0 || i >= items.length) return;
@@ -23,16 +33,27 @@
     lbImg.src = a.getAttribute('href');
     lbImg.alt = a.querySelector('img')?.getAttribute('alt') || '';
     lbCap.textContent = a.getAttribute('data-title') || '';
-    lb.classList.add('open');
-    lb.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
+
+    if (!lb.classList.contains('open')) {
+      returnFocusTo = document.activeElement;
+      lb.hidden = false;
+      lb.classList.add('open');
+      lb.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      lbClose.focus();
+    }
   }
 
   function close() {
     lb.classList.remove('open');
     lb.setAttribute('aria-hidden', 'true');
+    lb.hidden = true;
     document.body.style.overflow = '';
-    lbImg.src = '';
+    // Remove the attribute rather than setting src="" — an empty src
+    // makes some browsers re-request the current page.
+    lbImg.removeAttribute('src');
+    lbImg.alt = '';
+    if (returnFocusTo && typeof returnFocusTo.focus === 'function') returnFocusTo.focus();
   }
 
   function next() { openAt((currentIndex + 1) % items.length); }
@@ -40,6 +61,8 @@
 
   items.forEach((a, i) => {
     a.addEventListener('click', (e) => {
+      // Let modified clicks (new tab etc.) behave normally
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
       e.preventDefault();
       openAt(i);
     });
@@ -54,15 +77,22 @@
     if (e.target === lb) close();
   });
 
-  // Keyboard controls
+  // Keyboard controls + keep focus inside the dialog while open
   document.addEventListener('keydown', (e) => {
     if (!lb.classList.contains('open')) return;
     if (e.key === 'Escape') close();
-    if (e.key === 'ArrowRight') next();
-    if (e.key === 'ArrowLeft') prev();
+    else if (e.key === 'ArrowRight') next();
+    else if (e.key === 'ArrowLeft') prev();
+    else if (e.key === 'Tab') {
+      const focusables = [lbClose, lbPrev, lbNext];
+      const idx = focusables.indexOf(document.activeElement);
+      e.preventDefault();
+      const step = e.shiftKey ? -1 : 1;
+      focusables[(idx + step + focusables.length) % focusables.length].focus();
+    }
   });
 
-  // Small nicety: reveal-on-scroll for project cards
+  /* ---------- Reveal-on-scroll for project cards ---------- */
   if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     const io = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {

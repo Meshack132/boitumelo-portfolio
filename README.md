@@ -9,10 +9,11 @@ A static HTML/CSS/JS portfolio site. No build step, no framework. Just open `ind
 ├── index.html          ← main page
 ├── style.css           ← styles
 ├── script.js           ← lightbox + reveal animation
-├── favicon.svg         ← site favicon
+├── favicon.svg         ← site favicon (+ favicon-32.png, apple-touch-icon.png)
+├── og-image.jpg        ← 1200×630 link-preview image (LinkedIn, WhatsApp, etc.)
 ├── portfolio.pdf       ← downloadable full portfolio (referenced by "Download portfolio" button)
 ├── vercel.json         ← Vercel routing + cache config
-└── images/             ← project images (44 files)
+└── images/             ← project images (.jpg originals + .webp copies)
 ```
 
 ## Preview it locally
@@ -27,24 +28,25 @@ python3 -m http.server 8000
 
 Or drag `index.html` into a browser directly.
 
-## Before you deploy — add your contact details
+## Adding or replacing images
 
-Open `index.html` and look for the **CONTACT** section near the bottom. Add your email, LinkedIn, and phone number where indicated. The current note says: *"Add your preferred email and LinkedIn URL below by editing index.html."*
-
-Suggested addition (paste inside the `.contact-actions` div):
+Every image is served as WebP with a JPG fallback, inside a `<picture>` tag with
+explicit `width`/`height` (this stops the page jumping while images load):
 
 ```html
-<a class="btn btn-ghost" href="mailto:you@example.com">
-  <span>you@example.com</span>
-  <span class="btn-ico">↗</span>
-</a>
-<a class="btn btn-ghost" href="https://linkedin.com/in/YOUR-HANDLE" target="_blank" rel="noopener">
-  <span>LinkedIn</span>
-  <span class="btn-ico">↗</span>
-</a>
+<picture>
+  <source srcset="images/NAME.webp" type="image/webp" />
+  <img src="images/NAME.jpg" width="1200" height="800" alt="Describe the image" loading="lazy" decoding="async" />
+</picture>
 ```
 
-Then delete the `.contact-note` block above the footer.
+Create the WebP copy with any converter, e.g. `cwebp -q 80 NAME.jpg -o NAME.webp`.
+
+## If the site address changes
+
+The canonical URL, `og:url`, `og:image` and the JSON-LD block in `<head>` use the
+full site address. Search `index.html` for `vercel.app` and replace it with the new
+domain so link previews and search engines point to the right place.
 
 ## Deploy to Vercel — three ways
 
@@ -91,7 +93,9 @@ In Vercel dashboard → your project → **Settings → Domains** → add e.g. `
 
 **Add a project:** copy any `<article class="project">…</article>` block in `index.html`, bump the number, edit the title-block cells and copy, and update the image paths.
 
-**Replace an image:** drop the new file into `/images/` and update the `src` in `index.html`.
+**Replace an image:** drop the new `.jpg` and `.webp` into `/images/` and update both paths and the `width`/`height` in `index.html`.
+
+**Years of experience / footer year:** calculated automatically from 2010 in `script.js` — no yearly edits needed.
 
 **Change colours:** all colours are CSS variables at the top of `style.css` — edit `--bg`, `--ink`, `--accent`, etc.
 
@@ -100,6 +104,6 @@ In Vercel dashboard → your project → **Settings → Domains** → add e.g. `
 ## Notes
 
 - The site is fully static; no server-side code, no database, no build step required.
-- Images total ~6 MB across 44 files, which is fine for a portfolio. Vercel serves them with a year-long cache header (set in `vercel.json`).
+- Images are served as WebP (~3 MB for everything on the page, down from ~5.5 MB of JPG), which is fine for a portfolio. Vercel serves them with a year-long cache header (set in `vercel.json`).
 - Fonts are loaded from Google Fonts CDN — no self-hosting needed.
 - Reduced-motion preference is respected: scroll reveal and hover transitions disable automatically for users who ask for it.

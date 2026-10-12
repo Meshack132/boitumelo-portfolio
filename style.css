@@ -10,7 +10,7 @@
   --block-alt: #e2e0da;
   --ink: #14181a;
   --ink-70: #3a3d3f;
-  --ink-50: #6a6d6f;
+  --ink-50: #5e6163; /* darkened from #6a6d6f to pass WCAG AA (4.5:1) on all backgrounds */
   --ink-30: #a4a5a1;
   --rule: #cfcec8;
   --rule-strong: #b7b5ae;
@@ -42,6 +42,19 @@ body {
 }
 
 img { max-width: 100%; height: auto; display: block; }
+picture { display: block; }
+
+abbr[title] { text-decoration: none; cursor: help; }
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 a { color: inherit; text-decoration: none; }
 
@@ -126,6 +139,10 @@ a { color: inherit; text-decoration: none; }
   .mark-name { display: none; }
   .nav-links { gap: 18px; }
   .nav-links a { font-size: 11px; }
+}
+@media (max-width: 380px) {
+  .nav-links { gap: 12px; }
+  .nav-links a { letter-spacing: 0.02em; }
 }
 
 /* ============= HERO ============= */
@@ -348,6 +365,20 @@ a { color: inherit; text-decoration: none; }
   line-height: 1.4;
   max-width: 200px;
 }
+
+/* Lead stat — the station programme — links to the Kwesine case study */
+.stat-feature { display: block; }
+.stat-feature .stat-num { color: var(--accent); }
+.stat-link {
+  display: block;
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.stat-feature:hover .stat-link { text-decoration: underline; text-underline-offset: 3px; }
 
 @media (max-width: 900px) {
   .stats { grid-template-columns: repeat(2, 1fr); }
