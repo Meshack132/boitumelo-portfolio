@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://boitumelo-portfolio-8ptv.vercel.app/sitemap.xml

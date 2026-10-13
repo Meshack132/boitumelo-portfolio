@@ -92,6 +92,48 @@
     }
   });
 
+  /* ---------- Blueprint view toggle ---------- */
+  const root = document.documentElement;
+  const viewToggle = document.getElementById('viewToggle');
+  function syncToggle() {
+    const on = root.getAttribute('data-view') === 'blueprint';
+    viewToggle.setAttribute('aria-pressed', String(on));
+    viewToggle.title = on ? 'Switch to standard view' : 'Switch to blueprint view';
+  }
+  if (viewToggle) {
+    syncToggle();
+    viewToggle.addEventListener('click', () => {
+      const on = root.getAttribute('data-view') !== 'blueprint';
+      if (on) root.setAttribute('data-view', 'blueprint');
+      else root.removeAttribute('data-view');
+      try { localStorage.setItem('bm-view', on ? 'blueprint' : 'standard'); } catch (e) { /* storage unavailable */ }
+      syncToggle();
+    });
+  }
+
+  /* ---------- Before / after comparison ---------- */
+  document.querySelectorAll('.compare-frame').forEach((frame) => {
+    const range = frame.querySelector('.compare-range');
+    if (!range) return;
+    const update = () => frame.style.setProperty('--pos', range.value + '%');
+    range.addEventListener('input', update);
+    update();
+  });
+
+  /* ---------- Locality plan: link map pins and key ---------- */
+  const locLinks = Array.from(document.querySelectorAll('.locality [data-pins]'));
+  function setHot(ids, on) {
+    locLinks.forEach((el) => {
+      const mine = el.getAttribute('data-pins').split(',');
+      if (mine.some((id) => ids.includes(id))) el.classList.toggle('is-hot', on);
+    });
+  }
+  locLinks.forEach((el) => {
+    const ids = el.getAttribute('data-pins').split(',');
+    ['mouseenter', 'focus'].forEach((ev) => el.addEventListener(ev, () => setHot(ids, true)));
+    ['mouseleave', 'blur'].forEach((ev) => el.addEventListener(ev, () => setHot(ids, false)));
+  });
+
   /* ---------- Reveal-on-scroll for project cards ---------- */
   if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     const io = new IntersectionObserver((entries) => {
